@@ -1,0 +1,13 @@
+---
+- name: Test connection to my servers
+  hosts: all
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: Ping my Servers
+    ping:
+    register: result
+
+  - debug: 
+      var: result

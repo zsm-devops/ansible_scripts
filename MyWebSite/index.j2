@@ -1,0 +1,35 @@
+<!-- Первая Web-страница -->
+<!-- <!DOCTYPE> необходим, чтобы браузер понимал согласно какому стандарту отображать веб-страницу. -->
+<!DOCTYPE html>
+<html> <!-- Начало Web-страницы -->
+<head> <!-- Начало заголовка Web-страницы -->
+<!-- Описание метаданных, т.е. информации о Web-странице. -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF8">
+<font color="gold"><title>Изучение шаблонов в Ansible</title> <!-- Описание надписи на вкладке браузера -->
+<!-- Описание вида объектов Web-страницы -->
+<style type= "text/css"> 
+ 
+ 
+</style>
+</head>
+<script type= "text/javascript" language="JavaScript">
+// Описание сценариев изменения объектов
+
+</script>
+<!-- Описание объектов Web-страницы -->
+<body> 
+<font color="blue"> Owner of this server is: {{ owner }}<br>
+<!-- Заголовок 1 типа -->
+<h1>Заголовок типа 1</h1> 
+<br><br><br>
+<br><br><br>
+<!-- Обычный текст -->
+<font color="red">Моя первая Web-страница! С шаблонами<br>
+<font color="black">Server Host Name: {{ ansible_hostname }}<br>
+Server OS Family: {{ ansible_os_family }}<br>
+IP Address of this Server: {{ ansible_default_ipv4.address }}<br>
+</body>
+</html>
+
+
+

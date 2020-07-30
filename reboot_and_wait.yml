@@ -1,0 +1,21 @@
+---
+- name: Reboot and Wait until Server up
+  hosts: CentOS
+  become: yes
+
+  tasks: 
+  
+  - name: Reboot Sever
+    reboot:
+      msg: "Reboot"
+      reboot_timeout: 40 
+#  - name: Wait until Server Up
+#    wait_for: 
+ #       host: "{{ inventory_hostname }}"
+ #       port: "22"
+ #       state: "started"
+  #      delay: "30"
+ #       timeout: "180"
+ #   delegate_to: 127.0.0.1
+      
+    

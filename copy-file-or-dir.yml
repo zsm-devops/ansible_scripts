@@ -1,0 +1,17 @@
+---
+- name: Copy Files or Directories
+  hosts: CentOS
+  become: yes
+
+
+  vars:
+    copy_from: /home/zsm/ansible
+    copy_to: /home/zsm/Copy_From_Ubuntu
+
+  tasks:
+  - name: Copy files or directories 
+    copy: src={{ copy_from }} dest={{ copy_to }} mode=0755
+
+
+
+  

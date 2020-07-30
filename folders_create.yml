@@ -1,0 +1,24 @@
+---
+- name: Create folders
+  hosts: all
+  become: yes
+
+  tasks:
+#  - name: Create a few folders
+#    file: path=/home/secret/{{ item }} state=directory mode=0755
+#    loop: 
+#      - "folder1"
+#      - "folder2"
+#      - "folder3"
+
+#____Второй способ записи_____
+  - name: Create a few folders
+    file: 
+      path: /home/secret/{{ item }}  
+      state: directory  
+      mode: 0755
+    loop:
+      - "folder1"
+      - "folder2"
+      - "folder3"
+

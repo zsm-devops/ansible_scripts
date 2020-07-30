@@ -1,0 +1,16 @@
+---
+#__Запускать с ключем -к
+- name: Info about node (setup)
+  hosts: all
+#__Если текущий пользователь на сервере, откуда запускается скрипт, отличается от удаленного пользователя на хосте, тот надо искользовать become* и запускать с ключами -к -К
+#  become: yes
+#  become_user: root
+  remote_user: zsm
+
+  tasks:
+  - name: Setup
+    setup:   
+    register: var_setup
+
+  - debug:
+      var: var_setup

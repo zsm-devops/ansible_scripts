@@ -1,0 +1,76 @@
+---
+- name: Install Apache and Upload my Web Server
+  hosts: all
+  become: yes
+
+
+  vars:
+    source_folder: ./MyWebSite
+    dest_folder: /var/www/html
+
+
+  tasks:
+
+  - set_fact: family_and_pkg_mgr="OS Family - {{ ansible_os_family }}, Package Manager - {{ ansible_pkg_mgr }}"
+
+  - name: Check and Print Linux version
+    debug: 
+      var: family_and_pkg_mgr 
+ 
+  #_____________Block for Ubuntu\Debian (with "apt" package manager)__________
+  - block:
+      - name: Install Apache with "apt"
+        apt: name=apache2 state=latest
+
+#      - name: Copy My Web Server to Hosts
+#        copy: src={{ source_file }} dest={{ dest_file }} mode=0555
+#        notify: Restart Apache for Ubuntu\Debian
+
+      - name: Start WebServer and make it enable on boot for Ubuntu\Debian
+        service: name=apache2 state=started enabled=yes
+
+    when: ansible_pkg_mgr=="apt"
+
+
+  #_____________Block for RedHat (with "yum" package manager)__________
+  - block:
+      - name: Install Apache with "yum" or "dnf"
+        yum: name=httpd state=latest
+
+#      - name: Copy My Web Server to Hosts
+#        copy: src={{ source_file }} dest={{ dest_file }} mode=0555
+#        notify: Restart Apache for Redhat 
+
+      - name: Start WebServer and make it enable on boot for RedHat...
+        service: name=httpd state=started enabled=yes
+
+    when: ansible_pkg_mgr!="apt"
+
+  #________Генерируем index.html из index.j2____
+  - name: Generate index.html from index.j2
+    template: src={{ source_folder }}/index.j2 dest={{ dest_folder }}/index.html
+    notify:
+      - Restart Apache for Redhat
+      - Restart Apache for Ubuntu\Debian
+
+#______Копируем все картинки для сайта____
+#  - name: Copy images to Web Server
+#    copy: src=/folder/folder/{{ item }} dest={{ dest_folder }} mode=0555
+#    loop: 
+#       - "image1.jpg"
+#       - "image2.jpg"
+#       - "image3.jpg"
+#    notify:
+#      - Restart Apache for Redhat
+#      - Restart Apache for Ubuntu\Debian
+
+
+  handlers:
+  - name: Restart Apache for Redhat
+    service: name=httpd state=restarted
+    when: ansible_pkg_mgr!="apt"
+
+  - name: Restart Apache for Ubuntu\Debian
+    service: name=apache2 state=restarted
+    when: ansible_pkg_mgr=="apt"
+  

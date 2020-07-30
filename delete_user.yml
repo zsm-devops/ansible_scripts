@@ -1,0 +1,34 @@
+---
+- name: Delete some users
+  hosts: all
+  become: yes
+#__Удаление пользователей и их домашних директорий
+  tasks:
+    - name: Delete users
+      user: name={{ item }} state=absent
+      loop:
+        - "ansible1"
+        - "ansible2"
+        - "ansible3"
+        - "ansible4"
+        - "ansible5"
+        - "ansible6"
+        - "ansible7"
+        - "ansible8"
+        - "ansible9"
+        - "ansible10"
+            
+    - name: Delete Home_Dir of deleting users    
+      file: path=/home/{{ item }} state=absent       
+      loop:
+        - "ansible1"
+        - "ansible2"
+        - "ansible3"
+        - "ansible4"
+        - "ansible5"
+        - "ansible6"
+        - "ansible7"
+        - "ansible8"
+        - "ansible9"
+        - "ansible10"
+

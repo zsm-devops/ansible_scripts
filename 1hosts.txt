@@ -1,0 +1,4 @@
+[exp1]
+Kali ansible_host=192.168.56.101  ansible_user=zsm1 ansible_python_interpreter=/usr/bin/python3
+CentOS ansible_host=192.168.56.103  ansible_user=zsm
+

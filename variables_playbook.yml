@@ -1,0 +1,37 @@
+---
+- name: Playbook for Variables Lesson
+  hosts: CentOS
+  become: yes
+
+  vars:
+    message1: Privet
+    message2: World
+    secret: HJBFNSDKGFJASLFMAKSDGADS
+
+  tasks:
+  - name: Print secret Variable
+    debug:
+      var: secret
+
+  - debug:
+      msg: "Sekretnoe slovo: {{ secret }}"
+
+  - debug:
+      msg: "Vladelec etogo servera -->{{ ansible_user }}<--"
+
+  - set_fact: full_message="{{ message1 }} {{message2 }} from {{ ansible_user }}"
+
+  - debug:
+      var: full_message
+
+  - debug:
+      var: ansible_distribution
+
+  - shell: uptime
+    register: results
+
+  - debug:
+      var: results
+
+  - debug:
+      var: results.stdout
