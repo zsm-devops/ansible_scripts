@@ -1,0 +1,35 @@
+---
+#__Запускать с ключами -к -К
+- name: Add new ansible user to host with ssh_key
+  hosts: all
+  become: yes
+#__Если текущий пользователь на сервере, откуда запускается скрипт, отличается от удаленн$
+#  become_user: root
+#__Существующий пользователь на удаленном хосте
+  remote_user: zsm  
+  gather_facts: false
+
+#__Необходимо ввести имя нового пользователя
+  vars_prompt:
+    - name: user_name
+      prompt: "Enter new username"
+      private: no
+
+  tasks:
+#_Копирование public SSH ключа локального пользователя (zsm) в authorized_keys нового пользователя на удаленной машине
+    - name: Copy SSH key to home directory
+      authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ lookup('file', '/home/zsm/.ssh/id_rsa.pub') }}"
+      
+#_Добавление нового пользователя в группу sudo, чтобы не запрашивало sudo пароля при выполнение плэйбуков от имени этого пользователя         
+    - name: Adding user to sudoers
+      lineinfile:
+        dest: /etc/sudoers
+        line: "{{ user_name }} ALL=(ALL)  NOPASSWD: ALL"
+        validate: 'visudo -cf %s'
+  
+
+
+

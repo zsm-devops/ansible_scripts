@@ -1,6 +1,7 @@
 [debian]
 Kali ansible_host=192.168.56.101
-Ubuntu2004 ansible_host=192.168.56.104
+Ubuntu18044 ansible_host=192.168.56.102
+Ubuntu18044_new ansible_host=192.168.56.106
 
 [redhat]
 CentOS ansible_host=192.168.56.103
