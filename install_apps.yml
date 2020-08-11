@@ -1,0 +1,55 @@
+---
+#__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
+- name: Install APPs - Apache, mc, ntpdate ......
+  hosts: all
+  become: yes
+
+  tasks:
+
+  - set_fact: family_and_pkg_mgr="OS Family - {{ ansible_os_family }}, Package Manager - {{ ansible_pkg_mgr }}"
+
+  - name: Check and Print Linux version
+    debug: 
+      var: family_and_pkg_mgr 
+ 
+  #_____________Block for Ubuntu\Debian (with "apt" package manager)__________
+  - block:
+
+      - name: Update APPS via APT
+        apt:
+          update_cache: yes
+          cache_valid_time: 600
+
+      - name: Install APPs with "apt"
+        apt: name={{ item }} state=latest
+        loop:
+          - "mc"
+          - "apache2"
+          - "ntpdate"
+
+      - name: Start WebServer and make it enable on boot for Ubuntu\Debian
+        service: name=apache2 state=started enabled=yes
+
+    when: ansible_pkg_mgr=="apt"
+
+
+  #_____________Block for RedHat (with "yum" package manager)__________
+  - block:
+
+      - name: Update APPs via YUM
+        yum:
+           update_cache: yes
+           cache_valid_time: 600
+
+      - name: Install APPs with "yum" or "dnf"
+        yum: name={{ item }} state=latest
+        loop:
+          - "mc"
+          - "httpd"
+          - "ntpdate"
+
+      - name: Start WebServer and make it enable on boot for RedHat...
+        service: name=httpd state=started enabled=yes
+
+    when: ansible_pkg_mgr!="apt"
+

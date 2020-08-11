@@ -1,0 +1,14 @@
+---
+#__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
+- name: Python install
+  hosts: all
+  become: yes
+#  become_user: zsm
+  remote_user: zsm
+  gather_facts: false
+
+
+  tasks:
+
+  - name: Install APPs via YUM or APT
+    raw: apt -y update  
