@@ -1,0 +1,13 @@
+---
+- name: Line in File
+  hosts: CentOS
+  become: yes
+
+
+  tasks:
+#  - name:  insert line in file
+#    lineinfile: dest=/home/zsm/temp/111.txt insertafter="^111" line="foo"
+  
+  - name: 
+    lineinfile: dest=/home/zsm/temp/selinux regexp=^SELINUX= line=SELINUX=disabled
+
