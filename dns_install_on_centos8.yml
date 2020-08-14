@@ -1,0 +1,86 @@
+---
+#__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
+
+#############################################################
+# OperatingSystem : CentOS 8 server
+# Hostname : masterdns.zsmdevops.ru
+# IP Address : 192.168.56.103/24
+#############################################################
+- name: Install DNS and other APPs - Apache, mc, ntpdate ......
+  hosts: CentOS
+  become: yes
+
+  tasks:
+
+  - set_fact: family_and_pkg_mgr="OS Family - {{ ansible_os_family }}, Package Manager - {{ ansible_pkg_mgr }}"
+
+  - name: Check and Print Linux version
+    debug: 
+      var: family_and_pkg_mgr 
+ 
+  #_____________Block for RedHat (with "yum" package manager)__________
+  - block:
+
+      - name: Update APPs via YUM
+        yum:
+           update_cache: yes
+
+      - name: Install APPs with "yum" or "dnf"
+        yum: name={{ item }} state=latest
+        loop:
+          - "mc"
+          - "net-tools"
+          - "iptables-services"
+          - "chrony"              #Server vremeni
+          - "epel-release"
+          - "iftop"
+          - "htop"
+          - "atop"
+          - "lsof"
+          - "wget"
+          - "bzip2"
+          - "traceroute"
+          - "gdisk"              #Rabota s diskami
+          - "bind-utils"         #Dlya nastroyki DNS servera
+          - "bind"               #Dlya nastroyki DNS servera 
+
+#Skopirovat' fayly nastroek na svoi mesta
+      - name: Copy named.conf
+        copy: src=/home/zsm/ansible/files/named.conf dest=/etc owner=root group=named mode=0640
+
+      - name: Copy forward.zsmdevops, reverse.zsmdevops
+        copy: src=/home/zsm/ansible/files/{{ item }} dest=/var/named owner=root group=named mode=0644
+        loop:
+          - "forward.zsmdevops"
+          - "reverse.zsmdevops"
+
+#Start and add to autorun service named (DNS server)
+      - name: Start and add to autorun service named (DNS server)
+        systemd:
+          state: started
+          enabled: yes
+          name: named
+
+#Razreshit' DNS-serveru ispolzovat' porty 53 v Firewalld
+      - name: Firewalld Open ports
+        firewalld: port={{ item }} zone=public permanent=true state=enabled immediate=yes
+        loop:
+          - "53/tcp"
+          - "53/udp"
+
+#Zamena DNS servera na nash
+#(Dodelat',chtob zamenyalo DNS,esli on est', i dobavlyalo, esli net
+      - name: Add our DNS
+        lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-enp0s8 regexp=^DNS1= line=DNS1="192.168.56.103"
+
+#Otkluchit' SELinux
+      - name: Disable SELinux
+        lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=disabled
+
+
+
+#      - name: Start WebServer and make it enable on boot for RedHat...
+#        service: name=httpd state=started enabled=yes
+
+    when: ansible_pkg_mgr!="apt"
+

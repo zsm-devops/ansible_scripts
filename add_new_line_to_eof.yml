@@ -1,0 +1,12 @@
+---
+- name: Add new line at EOF
+  hosts: CentOS
+  become: yes
+
+  tasks:
+
+  - name: add a new string at the end of the file
+    lineinfile: dest=/home/zsm/temp/resolv.conf
+      regexp=''
+      insertafter=EOF
+      line='nameserver 192.168.56.103'

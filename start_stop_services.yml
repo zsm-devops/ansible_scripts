@@ -1,0 +1,18 @@
+---
+- name: Start/Stop services
+  hosts: CentOS
+  become: yes
+
+  tasks:
+
+  - name: Start and add to autorun service named (DNS server)
+    systemd:
+      state: started
+      enabled: yes      
+      name: named
+
+#  - name: Stop service named (DNS server)
+#    systemd:
+#      state: stopped
+#      name: named
+

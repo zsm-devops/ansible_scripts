@@ -1,0 +1,18 @@
+---
+- name: Firewalld config
+  hosts: CentOS
+  become: yes
+
+  tasks:
+
+#  - name: Firewalld Openn ports
+#    firewalld: port={{ item }} zone=public permanent=true state=enabled immediate=yes
+#    loop:
+#      - "1234/tcp"
+#      - "1234/udp"
+
+  - name: Firewalld Close ports       
+    firewalld: port={{ item }} zone=public permanent=true state=disabled immediate=yes
+    loop:
+      - "1234/tcp"
+      - "1234/udp"

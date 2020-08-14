@@ -1,0 +1,23 @@
+$TTL 86400
+@   IN  SOA     masterdns.zsmdevops.ru. root.zsmdevops.ru. (
+        2011071001  ;Serial
+        3600        ;Refresh
+        1800        ;Retry
+        604800      ;Expire
+        86400       ;Minimum TTL
+)
+@       IN  NS          masterdns.zsmdevops.ru.
+@       IN  PTR         zsmdevops.ru.
+masterdns        IN  A   192.168.56.103
+client1          IN  A   192.168.56.101
+client2          IN  A   192.168.56.102
+client3          IN  A   192.168.56.104
+client4          IN  A   192.168.56.105
+client5          IN  A   192.168.56.106
+103     IN  PTR         masterdns.unixmen.local.
+101     IN  PTR         client1.unixmen.local.
+102     IN  PTR         client2.unixmen.local.
+104     IN  PTR         client3.unixmen.local.
+105     IN  PTR         client4.unixmen.local.
+106     IN  PTR         client5.unixmen.local.
+

@@ -1,0 +1,9 @@
+---
+- name: Replace text
+  hosts: CentOS
+  become: yes
+
+  tasks:
+
+  - name: Disable SELinux
+    lineinfile: dest=/home/zsm/temp/ifcfg-enp0s8 regexp=^DNS1= line=DNS1="192.100.100.100"

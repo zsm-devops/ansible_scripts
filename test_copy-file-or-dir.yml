@@ -1,0 +1,21 @@
+---
+- name: Copy Files or Directories
+  hosts: CentOS
+  become: yes
+
+
+  vars:
+    copy_from: /home/zsm/ansible
+    copy_to: /home/zsm/Copy_From_Ubuntu
+
+  tasks:
+  - name: Copy files or directories 
+    copy: src=/home/zsm/ansible/files/named.conf dest=/etc owner=root group=named mode=0640 
+
+  - name: Copy files or directories
+    copy: src=/home/zsm/ansible/files/{{ item }} dest=/var/named owner=root group=named mode=0644
+    loop:
+      - "forward.zsmdevops"
+      - "reverse.zsmdevops"
+
+  
