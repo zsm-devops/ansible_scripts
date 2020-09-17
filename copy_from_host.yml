@@ -1,0 +1,12 @@
+---
+- name: Copy from remote Host
+  hosts: Mail2
+  become: yes
+
+  tasks:
+
+  - name: Copy from remote Host
+    synchronize:  src={{ item }} dest=~/ansible/files/ mode=pull
+    with_items:
+      - "~/togit/"
+      

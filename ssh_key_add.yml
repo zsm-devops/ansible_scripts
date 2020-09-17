@@ -1,10 +1,10 @@
 ---
 #__Запускать с ключами -к -К
 - name: Add new ansible user to host with ssh_key
-  hosts: all
+  hosts: Mail2
   become: yes
 #__Если текущий пользователь на сервере, откуда запускается скрипт, отличается от удаленн$
-#  become_user: root
+  become_user: root
 #__Существующий пользователь на удаленном хосте
   remote_user: zsm  
   gather_facts: false
