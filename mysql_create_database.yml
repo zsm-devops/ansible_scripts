@@ -1,0 +1,74 @@
+---
+- name: Install Apache and Upload my Web Server
+  hosts: Mail2
+  become: yes
+
+  tasks: 
+  # Добавляем mysql в автозагрузку и запускаем его:
+  - name: enable mysql
+    systemd:
+      daemon_reload: yes
+      name: mariadb.service
+      enabled: yes
+      state: started 
+
+  # Добавляем httpd в автозагрузку и запускаем его:
+  - name: enable httpd
+    systemd:
+      daemon_reload: yes
+      name: httpd.service
+      enabled: yes
+      state: started
+
+
+  # MySQL Configuration
+  - name: Sets the root password
+    mysql_user:
+      name: root
+      password: password_for_mysql_root   #Napisat' svoy parol'
+      host: localhost
+
+  - name: copy my.cnf
+    template: src=~/ansible/files/.my.cnf dest=/root/.my.cnf owner=root mode=0600
+
+
+  - name: Removes all anonymous user accounts
+    mysql_user:
+      name: ''
+      host_all: yes
+      state: absent
+      login_user: root
+      login_password: password_for_mysql_root
+
+  - name: Removes the MySQL test database
+    mysql_db:
+      name: test
+      state: absent
+      login_user: root
+      login_password: password_for_mysql_root
+
+  - name: Add DB to MySQL
+    mysql_db:
+      name: postfix
+      state: present
+#      login_user: postfix
+#      login_password: 123
+      encoding: utf8
+
+  - name: Add User to MySQL
+    mysql_user:
+      name: postfix
+      password: 123
+      priv: 'postfix.*:ALL,GRANT'
+      state: present
+
+
+  - name: Create directory for PostfixAdmin
+    file:
+      state: directory
+      path: "{{ item }}"
+      owner: apache  #?? Ubrat', esli budut oshibki
+      group: apache  #?? Ubrat', esli budut oshibki
+    loop:
+      - "/var/www/html/padmin"
+      - "/var/www/html/padmin/templates_c"

@@ -1,0 +1,358 @@
+---
+#__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
+
+#############################################################
+# OperatingSystem : CentOS 8 server
+# Hostname : masterdns.zsmdevops.ru
+# IP Address : 192.168.56.103/24
+#############################################################
+- name: Install DNS and other APPs - Apache, mc, ntpdate ......
+  hosts: Mail2
+  become: yes
+
+  vars_prompt:
+    - name: user_password
+      prompt: "Enter MySQL root password: "
+      confirm: yes
+      private: yes
+
+  tasks:
+
+  - set_fact: family_and_pkg_mgr="OS Family - {{ ansible_os_family }}, Package Manager - {{ ansible_pkg_mgr }}"
+
+  - name: Check and Print Linux version
+    debug: 
+      var: family_and_pkg_mgr 
+ 
+  #_____________Block for RedHat (with "yum" package manager)__________
+  - block:
+
+#Otkluchit' SELinux
+      - name: Disable SELinux
+        lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=disabled
+
+      - name: Disable SELinux right now
+        selinux:
+          state: disabled
+
+      - name: Update APPs via YUM
+        yum:
+           update_cache: yes
+
+      - name: Install Repo's - epel and Remi
+        yum: name={{ item }} state=present
+        loop:
+          - "dnf-utils"
+          - "https://rpms.remirepo.net/enterprise/remi-release-{{ ansible_distribution_major_version }}.rpm"
+ 
+
+      - name: Enable php remi-7.2
+        dnf:
+          name: "@php:remi-7.2"
+          enablerepo: yes
+          state: present
+
+
+      - name: Install App's
+        yum: name={{ item }} state=present
+        loop:
+          - "epel-release"
+          - "httpd"
+          - "php"
+          - "mariadb"
+          - "mariadb-server"
+          - "php-imap"
+          - "php-mysqlnd"
+          - "php-mbstring"
+          - "python3-mysql"
+          - "postfix"
+          - "postfix-mysql"
+          - "dovecot"
+          - "dovecot-mysql"
+          - "dovecot-pigeonhole"
+
+          
+#      - name: Download PostfixAdmin
+#        get_url: 
+#          url=https://sourceforge.net/projects/postfixadmin/files/postfixadmin/postfixadmin-3.2/postfixadmin-3.2.tar.gz 
+#          dest=/home/zsm/Downloads
+
+
+#PostfixAdmin
+      #Sozdadim vse neobhodimie directory. User=apache, group=apache
+      - name: Create directory for PostfixAdmin
+        file:
+          state: directory
+          path: "{{ item }}"
+          owner: apache  #?? Ubrat', esli budut oshibki
+          group: apache  #?? Ubrat', esli budut oshibki
+        loop:
+          - "/var/www/html/padmin"
+          - "/var/www/html/padmin/templates_c"
+          - "/etc/postfix/mysql"
+
+      #Sozdadim vse neobhodimie directory
+#      - name: Create directory for MySQL
+#        file:
+#          state: directory
+#          path: "{{ item }}"
+#        loop:
+#          - "/etc/postfix/mysql"
+          
+
+      - name: Download and Extract PostfixAdmin
+        unarchive: 
+          src: https://sourceforge.net/projects/postfixadmin/files/postfixadmin/postfixadmin-3.2/postfixadmin-3.2.tar.gz
+          dest: /var/www/html/padmin
+          owner: apache
+          group: apache
+          remote_src: yes
+          extra_opts: [--strip-components=1]
+          
+      - name: Copy config.inc.php for PostfixAdmin
+        copy:
+          src: ~/ansible/files/postfixadmin/config.local.php
+          dest: /var/www/html/padmin/config.local.php
+          owner: apache
+          group: apache
+          mode: 0664
+          remote_src: no
+
+
+#MariaDB
+      #Sozdadim vse neobhodimie directory
+      - name: Create directory for MySQL
+        file:
+          state: directory
+          path: "{{ item }}"
+        loop:
+          - "/etc/postfix/mysql"
+          - "/etc/postfix/certs"
+
+      # Добавляем MariaDB в автозагрузку и запускаем его:
+      - name: enable MariaDB
+        systemd:
+          daemon_reload: yes
+          name: mariadb.service
+          enabled: yes
+          state: started
+
+      # Добавляем httpd в автозагрузку и запускаем его:
+#      - name: enable httpd
+#        systemd:
+#          daemon_reload: yes
+#          name: httpd.service
+#          enabled: yes
+#          state: started
+
+      # MySQL Configuration
+      - name: Sets the root password
+        mysql_user:
+          name: root
+          password: "{{ user_password }}"
+          host: localhost
+
+      #Dlya dal'neyshey raboty s BD ot imeni root
+      - name: copy my.cnf
+        template: src=~/ansible/files/.my.cnf dest=/root/.my.cnf owner=root mode=0600
+
+      #Removes all anonymous user accounts
+      - name: Removes all anonymous user accounts
+        mysql_user:
+          name: ''
+          host_all: yes
+          state: absent
+          login_user: root
+          login_password: "{{ user_password }}"
+
+      #Removes the MySQL test database
+      - name: Removes the MySQL test database
+        mysql_db:
+          name: test
+          state: absent
+          login_user: root
+          login_password: "{{ user_password }}"
+
+      #Add "postfix" DB
+      - name: Add DB to MySQL
+        mysql_db:
+          name: postfix
+          state: present
+#         login_user: postfix
+#         login_password: 123
+          encoding: utf8
+
+      #Dobavim usera "postfix" s pravami na BD "postfix"
+      - name: Add User to MySQL
+        mysql_user:
+          name: postfix
+          password: 123
+          priv: 'postfix.*:ALL,GRANT'
+          state: present
+
+#Postfix
+      - name: Copy main and master files for Postfix
+        copy:
+          src: ~/ansible/files/postfix/{{ item }}
+          dest: /etc/postfix/{{ item }}
+          remote_src: no
+        loop:
+          - "main.cf"
+          - "master.cf"
+          - "recipient_bcc_maps"
+          - "sender_bcc_maps"
+
+      - name: Copy configuration files for MySQL
+        copy:
+          src: ~/ansible/files/postfix/mysql/{{ item }}
+          dest: /etc/postfix/mysql/{{ item }}
+          remote_src: no
+        loop:
+          - "relay_domains.cf"
+          - "virtual_alias_domain_maps.cf"
+          - "virtual_alias_maps.cf"
+          - "virtual_mailbox_domains.cf"
+          - "virtual_mailbox_maps.cf"              
+
+      - name: Postmap
+        command: postmap /etc/postfix/recipient_bcc_maps /etc/postfix/sender_bcc_maps
+
+
+#Certificate
+      - name: "Generate the private key file to sign the CSR"
+        openssl_privatekey:
+          path: /etc/postfix/certs/key.pem
+
+      - name: "Generate the CSR file signed with the private key"
+        openssl_csr:
+          path: /etc/postfix/certs/csr.pem
+          privatekey_path: /etc/postfix/certs/key.pem
+          common_name: zsmdevops.ru
+
+      - name: Generate a Self Signed OpenSSL certificate
+        openssl_certificate:
+          path: /etc/postfix/certs/cert.pem
+          privatekey_path: /etc/postfix/certs/key.pem
+          csr_path: /etc/postfix/certs/csr.pem
+          provider: selfsigned
+
+#Dovecot
+      - name: Copy files for Dovecot
+        copy:
+          src: ~/ansible/files/dovecot_without_confd/{{ item }}
+          dest: /etc/dovecot/{{ item }}
+          remote_src: no
+        loop:
+          - "dovecot.conf"
+          - "dovecot-mysql.conf"
+
+      - name: Add group vmail with GID=1150
+        group:
+          name: vmail
+          gid: 1150
+          state: present
+
+      - name: Add user vmail with UID=1150
+        user:
+          name: vmail
+          uid: 1150
+          group: vmail
+
+      - name: Create directory /mnt/mail
+        file:
+          state: directory
+          path: "{{ item }}"
+          owner: vmail
+          group: vmail
+        loop:
+          - "/mnt/mail"
+          - "/mnt/mail/shared-folders"
+
+      - name: Create directory for Log files
+        file:
+          state: directory
+          path: "{{ item }}"
+          owner: vmail
+          group: dovecot
+        loop:
+          - "/var/log/dovecot"
+
+      - name: Create Log files
+        file:
+          state: touch
+          path: /var/log/dovecot/{{ item }}
+          owner: vmail
+          group: dovecot
+        loop:
+          - "main.log"
+          - "info.log"
+          - "debug.log"
+          - "lda-errors.log"
+          - "lda-deliver.log"
+          - "lmtp.log"
+
+      # Добавляем httpd в автозагрузку и запускаем его:
+      - name: enable httpd, postfix, dovecot
+        systemd:
+          daemon_reload: yes
+          name: "{{ item }}"
+          enabled: yes
+          state: started
+        loop:
+          - "httpd"
+          - "postfix"
+          - "dovecot"
+
+
+#Skopirovat' fayly nastroek na svoi mesta
+#      - name: Copy named.conf
+#        copy: src=/home/zsm/ansible/files/named.conf dest=/etc owner=root group=named mode=0640
+
+#      - name: Copy forward.zsmdevops, reverse.zsmdevops
+#        copy: src=/home/zsm/ansible/files/{{ item }} dest=/var/named owner=root group=named mode=0644
+#        loop:
+#          - "forward.zsmdevops"
+#          - "reverse.zsmdevops"
+
+#Start and add to autorun service named (DNS server)
+#      - name: Start and add to autorun service named (DNS server)
+#        systemd:
+#          state: started
+#          enabled: yes
+#          name: named
+
+#Razreshit' DNS-serveru ispolzovat' porty 53 v Firewalld
+      - name: Firewalld Open ports
+        firewalld: port={{ item }} zone=public permanent=true state=enabled immediate=yes
+        loop:
+          - "53/tcp"
+          - "53/udp"
+          - "25/tcp"
+          - "80/tcp"
+          - "110/tcp"
+          - "143/tcp"
+          - "443/tcp"
+          - "465/tcp"
+          - "587/tcp"
+          - "993/tcp"
+          - "995/tcp"
+
+
+#Zamena DNS servera na nash
+#(Dodelat',chtob zamenyalo DNS,esli on est', i dobavlyalo, esli net
+#      - name: Add our DNS
+#        lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-enp0s8 regexp=^DNS1= line=DNS1="192.168.56.108"
+
+#Dobavlenie IP DNS servera v resolv.conf
+#      - name: add DNS server's IP at /etc/resolv.conf
+#        lineinfile: dest=/etc/resolv.conf
+#          regexp=''
+#          insertafter=EOF
+#          line='nameserver 192.168.56.107'
+
+
+#      - name: Start WebServer and make it enable on boot for RedHat...
+#        service: name=httpd state=started enabled=yes
+
+    when: ansible_pkg_mgr!="apt"
+

@@ -1,6 +1,7 @@
 ---
 - name: Copy Files or Directories
-  hosts: CentOS
+  hosts: Mail2
+  become_user: root
   become: yes
 
 
@@ -10,12 +11,12 @@
 
   tasks:
   - name: Copy files or directories 
-    copy: src=/home/zsm/ansible/files/named.conf dest=/etc owner=root group=named mode=0640 
+    copy: src=/var/www/html/padmin/config.inc.php dest=/var/www/html/padmin/config.local.php owner=apache group=apache mode=0664 remote_src=yes
 
-  - name: Copy files or directories
-    copy: src=/home/zsm/ansible/files/{{ item }} dest=/var/named owner=root group=named mode=0644
-    loop:
-      - "forward.zsmdevops"
-      - "reverse.zsmdevops"
+#  - name: Copy files or directories
+#    copy: src=/home/zsm/ansible/files/{{ item }} dest=/var/named owner=root group=named mode=0644
+#    loop:
+#      - "forward.zsmdevops"
+#      - "reverse.zsmdevops"
 
   
