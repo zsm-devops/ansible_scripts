@@ -1,35 +1,27 @@
 ---
-#__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
+#__Необходимо запускать с ключем -k -K (ansible-playbook python_install.yml -k -K)
 - name: Python install
-  hosts: all
+  hosts: DNS
   become: yes
 #  become_user: zsm
-  remote_user: zsm
+  remote_user: root
   gather_facts: false
 
 
   tasks:
-#__Вывод на экрана результата команды setup (всей информации по хосту)
-  - name: Info
-    setup:
-    register: var_setup
-  - debug:
-      var: var_setup
-    
-    
 
-  - name: Check for Python
-    raw: test -e /usr/bin/python
-    #__Отключить проверку на changed
-    changed_when: false  
-    #__Отключить проверку на failed
-    failed_when: false
-    register: check_python
+#  - name: Check for Python
+#    raw: test -e /usr/bin/python
+#    #__Отключить проверку на changed#
+#    changed_when: false  
+#    #__Отключить проверку на failed#
+#    failed_when: false
+#    register: check_python
 #    failed_when: check_python.rc == 0
 #  - debug:
 #      var: check_python
  
   - name: Install Python via YUM or APT
 #Esli padaet v error, udalit' "apt -y update"
-    raw: test -e /usr/bin/apt && (apt -y update && apt install -y python-minimal) || (yum -y install python2)
-    when: check_python.rc!=0
+    raw: test -e /usr/bin/apt && (apt -y update && apt install -y python-minimal) || (yum -y install python3)
+#    when: check_python.rc!=0
