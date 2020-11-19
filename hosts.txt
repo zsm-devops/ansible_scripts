@@ -8,6 +8,7 @@ CentOS ansible_host=192.168.56.103
 CentOS82 ansible_host=192.168.56.107 ansible_user=zsm
 DNS ansible_host=192.168.56.108 ansible_user=zsm
 Mail2 ansible_host=192.168.56.109 ansible_user=zsm
+AWS ansible_host=3.122.114.65
 
 
 [all_linux:children]

@@ -1,0 +1,10 @@
+---
+
+- name: Set a hostname
+  hosts: DNS
+  become: yes
+
+  tasks:
+  - name: Set a hostname
+    hostname:
+      name: masterdns.zsmdevops.ru

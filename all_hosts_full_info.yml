@@ -1,10 +1,10 @@
 ---
 #__Необходимо запускать с ключем -K (ansible-playbook python_install.yml -K)
-- name: Python install
-  hosts: all
+- name: All info
+  hosts: AWS
   become: yes
 #  become_user: zsm
-  remote_user: zsm
+#  remote_user: zsm
 #  gather_facts: false
 
 
