@@ -1,0 +1,65 @@
+---
+- name: Copy from remote Host
+#  hosts: exim21_tpahive1e021 
+  hosts: localhost
+  remote_user: root
+  become: yes
+
+
+  tasks:
+#If file exists in dest=, it will be overwritten from src=.
+  - name: Backup (Copy from remote Host)
+    synchronize:  src={{ item }} dest=~/git_directory/ansible_vikas/files/{{ ansible_date_time.iso8601 }} mode=pull 
+    with_items:
+      - "/tmp/111/"
+
+  - name: New SSL to remote servers
+    synchronize:  dest={{ item }} src=~/git_directory/ansible_vikas/files/new_ssl/ mode=push
+    with_items:
+      - "/tmp/111/"
+
+  - name: Check APACHE configs
+    shell: "apache2ctl configtest"
+    register: apache_config_status
+
+  - name: Apache test status
+    debug:
+      msg: "{{ apache_config_status }}"
+
+  - name: Apache test status
+    debug:
+      msg: "{{ apache_config_status.rc }}"
+
+  - name: Service Apache reload if configs are OK
+    service:
+      name: apache2
+      state: reloaded
+    when: apache_config_status.rc == 0
+
+  - name: Check NGINX configs
+    shell: "/usr/sbin/nginx -t"
+    register: nginx_config_status
+
+  - name: NGINX test status
+    debug:
+      msg: "{{ nginx_config_status }}"
+
+  - name: NGINX test status
+    debug:
+      msg: "{{ nginx_config_status.rc }}"
+
+  - name: Service NGINX reload if configs are OK
+    service:
+      name: nginx
+      state: reloaded
+    when: nginx_config_status.rc == 0
+
+#    systemd:
+#      name: nginx
+#      state: restarted
+#      enabled: yes
+#      daemon_reload: yes
+#    when: nginx_config_status.rc == 0
+
+
+      
